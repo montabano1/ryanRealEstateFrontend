@@ -257,7 +257,7 @@ function generateReport(event) {
     
     // Start the scraping process with proper headers
     // Replace with your DigitalOcean API URL
-    const API_BASE_URL = 'https://nyc-real-estate-api-xxxxx.ondigitalocean.app';  // We'll update this after deployment
+    const API_BASE_URL = 'https://lionfish-app-q55mm.ondigitalocean.app';
 
     fetch(`${API_BASE_URL}/api/generate-report`, {
         method: 'POST',
