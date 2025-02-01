@@ -178,8 +178,11 @@ function initializeDataTable(data) {
     });
 }
 
+// Define API base URL at the top of the file
+const API_BASE_URL = 'https://lionfish-app-q55mm.ondigitalocean.app';
+
 function loadLatestData() {
-    fetch('/api/latest-data')
+    fetch(`${API_BASE_URL}/api/latest-data`)
         .then(response => response.json())
         .then(result => {
             if (result.success && result.data && result.data.properties) {
@@ -256,9 +259,6 @@ function generateReport(event) {
     };
     
     // Start the scraping process with proper headers
-    // Replace with your DigitalOcean API URL
-    const API_BASE_URL = 'https://lionfish-app-q55mm.ondigitalocean.app';
-
     fetch(`${API_BASE_URL}/api/generate-report`, {
         method: 'POST',
         headers: {
