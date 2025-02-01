@@ -256,6 +256,9 @@ function generateReport(event) {
 
 }
 
+let retryCount = 0;
+const MAX_RETRIES = 12; // 1 minute total (5s * 12)
+
 function checkForData() {
     // Get the latest data file from the data directory
     fetch(`${API_BASE_URL}/api/latest-data`)
@@ -269,15 +272,28 @@ function checkForData() {
                 $('#loadingSpinner').hide();
                 $('#generateBtn').prop('disabled', false);
                 showSuccess('Report generated successfully!');
+                retryCount = 0; // Reset counter
             } else {
-                throw new Error('No data available');
+                handleRetry('No data available yet');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            showError('Error loading data: ' + error);
-            $('#generateBtn').prop('disabled', false);
+            handleRetry(error.message);
         });
+}
+
+function handleRetry(message) {
+    retryCount++;
+    if (retryCount < MAX_RETRIES) {
+        console.log(`Retry ${retryCount}/${MAX_RETRIES}: ${message}`);
+        setTimeout(checkForData, 5000);
+    } else {
+        console.error('Max retries reached:', message);
+        $('#loadingSpinner').hide();
+        $('#generateBtn').prop('disabled', false);
+        showError('Failed to generate report. Please try again.');
+        retryCount = 0; // Reset counter
+    }
 }
 
 function initializeEmptyDataTable() {
