@@ -178,8 +178,9 @@ function initializeDataTable(data) {
     });
 }
 
-// Define API base URL at the top of the file
-const API_BASE_URL = 'https://shark-app-l8hmq.ondigitalocean.app';
+// Define API base URL based on environment
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_BASE_URL = isDevelopment ? 'http://localhost:5001' : 'https://shark-app-l8hmq.ondigitalocean.app';
 
 function loadLatestData() {
     fetch(`${API_BASE_URL}/api/latest-data`)
@@ -257,7 +258,8 @@ function generateReport(event) {
 }
 
 let retryCount = 0;
-const MAX_RETRIES = 12; // 1 minute total (5s * 12)
+const MAX_RETRIES = 20; // 10 minutes total (30s * 20)
+const RETRY_INTERVAL = 30000; // 30 seconds
 
 function checkForData() {
     // Get the latest data file from the data directory
@@ -285,8 +287,9 @@ function checkForData() {
 function handleRetry(message) {
     retryCount++;
     if (retryCount < MAX_RETRIES) {
-        console.log(`Retry ${retryCount}/${MAX_RETRIES}: ${message}`);
-        setTimeout(checkForData, 5000);
+        const remainingTime = (MAX_RETRIES - retryCount) * (RETRY_INTERVAL / 1000);
+        console.log(`Retry ${retryCount}/${MAX_RETRIES}: ${message}. Will keep trying for ${remainingTime} seconds.`);
+        setTimeout(checkForData, RETRY_INTERVAL);
     } else {
         console.error('Max retries reached:', message);
         $('#loadingSpinner').hide();
