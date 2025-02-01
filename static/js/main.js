@@ -229,34 +229,45 @@ function generateReport(event) {
     // Send API key with the request
     const requestData = { api_key: apiKey };
     
-    // Start progress updates
-    const eventSource = new EventSource(`${API_BASE_URL}/api/progress`);
+    // Start progress updates using polling
     let lastProgress = 0;
-    
-    eventSource.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        
-        // Handle errors
-        if (data.error) {
-            eventSource.close();
-            showError('Error: ' + data.message);
-            $('#generateBtn').prop('disabled', false);
-            return;
-        }
-        
-        // Update progress
-        if (data.progress >= lastProgress) {
-            $('.progress-bar-fill').css('width', data.progress + '%');
-            $('.progress-message').text(data.message);
-            lastProgress = data.progress;
-        }
-        
-        // When done, check for data
-        if (data.done) {
-            eventSource.close();
-            checkForData();
-        }
-    };
+    let pollInterval;
+
+    function pollProgress() {
+        fetch(`${API_BASE_URL}/api/status`)
+            .then(response => response.json())
+            .then(data => {
+                // Handle errors
+                if (data.error) {
+                    clearInterval(pollInterval);
+                    showError('Error: ' + data.message);
+                    $('#generateBtn').prop('disabled', false);
+                    return;
+                }
+                
+                // Update progress
+                if (data.progress >= lastProgress) {
+                    $('.progress-bar-fill').css('width', data.progress + '%');
+                    $('.progress-message').text(data.message);
+                    lastProgress = data.progress;
+                }
+                
+                // When done, check for data
+                if (data.done) {
+                    clearInterval(pollInterval);
+                    checkForData();
+                }
+            })
+            .catch(error => {
+                console.error('Error polling progress:', error);
+                // Don't stop polling on network errors
+            });
+    }
+
+    // Poll every 2 seconds
+    pollInterval = setInterval(pollProgress, 2000);
+    // Initial poll
+    pollProgress();
     
     // Start the scraping process with proper headers
     fetch(`${API_BASE_URL}/api/generate-report`, {
