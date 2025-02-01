@@ -283,7 +283,7 @@ function generateReport(event) {
 
 function checkForData() {
     // Get the latest data file from the data directory
-    fetch('/api/latest-data')
+    fetch(`${API_BASE_URL}/api/latest-data`)
         .then(response => response.json())
         .then(result => {
             if (result.success && result.data && result.data.properties) {
