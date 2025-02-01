@@ -221,7 +221,7 @@ function generateReport(event) {
     }
 
     $('#generateBtn').prop('disabled', true);
-    $('#progressContainer').show();
+    $('#loadingSpinner').show();
     $('#alertBox').hide();
     $('#tableContainer').removeClass('has-data');
     $('.dataTables_wrapper').hide();
@@ -229,47 +229,7 @@ function generateReport(event) {
     // Send API key with the request
     const requestData = { api_key: apiKey };
     
-    // Start progress updates using polling
-    let lastProgress = 0;
-    let pollInterval;
-
-    function pollProgress() {
-        fetch(`${API_BASE_URL}/api/status`)
-            .then(response => response.json())
-            .then(data => {
-                // Handle errors
-                if (data.error) {
-                    clearInterval(pollInterval);
-                    showError('Error: ' + data.message);
-                    $('#generateBtn').prop('disabled', false);
-                    return;
-                }
-                
-                // Update progress
-                if (data.progress >= lastProgress) {
-                    $('.progress-bar-fill').css('width', data.progress + '%');
-                    $('.progress-message').text(data.message);
-                    lastProgress = data.progress;
-                }
-                
-                // When done, check for data
-                if (data.done) {
-                    clearInterval(pollInterval);
-                    checkForData();
-                }
-            })
-            .catch(error => {
-                console.error('Error polling progress:', error);
-                // Don't stop polling on network errors
-            });
-    }
-
-    // Poll every 2 seconds
-    pollInterval = setInterval(pollProgress, 2000);
-    // Initial poll
-    pollProgress();
-    
-    // Start the scraping process with proper headers
+    // Start the scraping process
     fetch(`${API_BASE_URL}/api/generate-report`, {
         method: 'POST',
         headers: {
@@ -283,13 +243,17 @@ function generateReport(event) {
         if (!result.success) {
             throw new Error(result.error || 'Failed to start scraping');
         }
+        // Wait a few seconds before checking for data
+        setTimeout(checkForData, 5000);
     })
     .catch(error => {
         console.error('Error:', error);
         showError('Error starting report generation: ' + error);
-        eventSource.close();
         $('#generateBtn').prop('disabled', false);
+        $('#loadingSpinner').hide();
     });
+    
+
 }
 
 function checkForData() {
@@ -302,7 +266,7 @@ function checkForData() {
                 $('#lastUpdate').text(new Date().toLocaleString());
                 $('#tableContainer').addClass('has-data');
                 $('.dataTables_wrapper').show();
-                $('#progressContainer').hide();
+                $('#loadingSpinner').hide();
                 $('#generateBtn').prop('disabled', false);
                 showSuccess('Report generated successfully!');
             } else {
