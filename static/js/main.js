@@ -179,7 +179,7 @@ function initializeDataTable(data) {
 }
 
 // Define API base URL at the top of the file
-const API_BASE_URL = 'https://lionfish-app-q55mm.ondigitalocean.app';
+const API_BASE_URL = 'https://shark-app-l8hmq.ondigitalocean.app';
 
 function loadLatestData() {
     fetch(`${API_BASE_URL}/api/latest-data`)
